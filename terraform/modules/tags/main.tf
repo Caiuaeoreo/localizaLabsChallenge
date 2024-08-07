@@ -34,7 +34,10 @@ variable "coststring" {
 }
 
 locals {
+  name = "${var.team}-${var.application}-${var.environment}"
+
   common_tags = {
+    Name         = local.name
     Product      = var.product
     Team         = var.team
     Environment  = var.environment
@@ -43,4 +46,8 @@ locals {
     AppID        = var.appid
     CostString   = var.coststring
   }
+}
+
+output "tags" {
+  value = local.common_tags
 }
