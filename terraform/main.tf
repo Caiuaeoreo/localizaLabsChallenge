@@ -134,34 +134,6 @@ resource "aws_security_group" "eks_cluster_sg" {
   tags = module.tags.tags
 }
 
-# IAM Policy Document for EKS Node Role
-data "aws_iam_policy_document" "eks_node_assume_role_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
-    }
-  }
-}
-
-# IAM Role Policy Attachments for EKS Nodes
-resource "aws_iam_role_policy_attachment" "eks_node_role_AmazonEKSWorkerNodePolicy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-  role       = aws_iam_role.eks_node_role.name
-}
-
-resource "aws_iam_role_policy_attachment" "eks_node_role_AmazonEC2ContainerRegistryReadOnly" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-  role       = aws_iam_role.eks_node_role.name
-}
-
-resource "aws_iam_role_policy_attachment" "eks_node_role_AmazonEKS_CNI_Policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-  role       = aws_iam_role.eks_node_role.name
-}
-
 # EKS Cluster
 resource "aws_eks_cluster" "eks_cluster" {
   name     = var.application
@@ -192,7 +164,7 @@ resource "aws_eks_node_group" "node_group" {
 }
 
 # ECR Repository
-resource "aws_ecr_repository" "my_app_repo" {
+resource "aws_ecr_repository" "my-app-repo" {
   name = "${var.application}-${var.environment}"
 
   image_tag_mutability = "MUTABLE"

@@ -25,7 +25,7 @@ variable "ticket" {
 variable "application" {
   description = "Application name"
   type        = string
-  default     = "myApp"
+  default     = "myapp"
 }
 
 variable "appid" {
