@@ -53,7 +53,7 @@ jobs:
       - name: Apply Terraform
         run: |
           cd terraform
-          terraform apply -auto-approve
+          terraform plan
 
       - name: Login to Amazon ECR
         run: |
