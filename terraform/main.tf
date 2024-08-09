@@ -115,11 +115,11 @@ resource "aws_iam_role_policy_attachment" "eks_node_role_AmazonEKS_CNI_Policy" {
 
 # Security Group for EKS Cluster
 resource "aws_security_group" "eks_cluster_sg" {
-  vpc_id = module.vpc.vpc_id
+  vpc_id = aws_vpc.main.id
 
   ingress {
-    from_port   = 443
-    to_port     = 443
+    from_port   = 0
+    to_port     = 65535
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -134,13 +134,41 @@ resource "aws_security_group" "eks_cluster_sg" {
   tags = module.tags.tags
 }
 
+# IAM Policy Document for EKS Node Role
+data "aws_iam_policy_document" "eks_node_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+# IAM Role Policy Attachments for EKS Nodes
+resource "aws_iam_role_policy_attachment" "eks_node_role_AmazonEKSWorkerNodePolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+  role       = aws_iam_role.eks_node_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "eks_node_role_AmazonEC2ContainerRegistryReadOnly" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role       = aws_iam_role.eks_node_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "eks_node_role_AmazonEKS_CNI_Policy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+  role       = aws_iam_role.eks_node_role.name
+}
+
 # EKS Cluster
 resource "aws_eks_cluster" "eks_cluster" {
-  name     = module.tags.name
+  name     = var.application
   role_arn = aws_iam_role.eks_role.arn
 
   vpc_config {
-    subnet_ids = module.vpc.private_subnets
+    subnet_ids         = [aws_subnet.public_a.id, aws_subnet.public_b.id]
     security_group_ids = [aws_security_group.eks_cluster_sg.id]
   }
 
@@ -150,15 +178,24 @@ resource "aws_eks_cluster" "eks_cluster" {
 # EKS Node Group
 resource "aws_eks_node_group" "node_group" {
   cluster_name    = aws_eks_cluster.eks_cluster.name
-  node_group_name = "eks-${module.tags.name}-ng"
+  node_group_name = "eks-${var.application}-ng"
   node_role_arn   = aws_iam_role.eks_node_role.arn
-  subnet_ids      = module.vpc.private_subnets
+  subnet_ids      = [aws_subnet.public_a.id, aws_subnet.public_b.id]
 
   scaling_config {
     desired_size = 2
     max_size     = 3
     min_size     = 1
   }
+
+  tags = module.tags.tags
+}
+
+# ECR Repository
+resource "aws_ecr_repository" "my_app_repo" {
+  name = "${var.application}-${var.environment}"
+
+  image_tag_mutability = "MUTABLE"
 
   tags = module.tags.tags
 }
