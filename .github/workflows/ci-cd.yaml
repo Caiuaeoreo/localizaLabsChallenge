@@ -30,6 +30,12 @@ jobs:
           cd flask-app
           docker build -t my-flask-app:latest .
 
+      - name: Save Docker image as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: my-flask-app-image
+          path: /var/lib/docker/volumes
+
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -45,18 +51,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-
-      - name: Tag Docker image
-        run: |
-          docker tag my-flask-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-flask-app:latest
-
-      - name: Push Docker image to ECR
-        run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-flask-app:latest
-
       - name: Initialize Terraform
         run: |
           cd terraform
@@ -66,3 +60,25 @@ jobs:
         run: |
           cd terraform
           terraform plan
+
+      - name: Apply Terraform
+        run: |
+          cd terraform
+          terraform apply -auto-approve
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: my-flask-app-image
+
+      - name: Tag Docker image
+        run: |
+          docker tag my-flask-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-flask-app:latest
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-flask-app:latest
