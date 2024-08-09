@@ -20,18 +20,21 @@ jobs:
 
       - name: Install dependencies
         run: |
+          cd flask-app
           python -m venv venv
           . venv/bin/activate
           pip install -r requirements.txt
 
       - name: Build Docker image
         run: |
+          cd flask-app
           docker build -t my-flask-app:latest .
 
       - name: Push Docker image to ECR
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
+          cd flask-app
           $(aws ecr get-login-password --region $AWS_REGION) | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
           docker tag my-flask-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/my-flask-app:latest
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/my-flask-app:latest
@@ -52,7 +55,11 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Initialize Terraform
-        run: terraform init
+        run: |
+          cd terraform
+          terraform init
 
       - name: Apply Terraform
-        run: terraform apply -auto-approve
+        run: |
+          cd terraform
+          terraform apply -auto-approve
