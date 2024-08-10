@@ -12,8 +12,3 @@ resource "aws_s3_bucket_versioning" "versioning" {
     status = "Enabled"
   }
 }
-
-resource "aws_s3_bucket_acl" "acl" {
-  bucket = aws_s3_bucket.terraform_state.id
-  acl    = "private"
-}
