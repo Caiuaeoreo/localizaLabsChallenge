@@ -164,7 +164,7 @@ resource "aws_eks_node_group" "node_group" {
 }
 
 # ECR Repository
-resource "aws_ecr_repository" "my-app-repo" {
+resource "aws_ecr_repository" "myapp-repo" {
   name = "${var.application}-${var.environment}"
 
   image_tag_mutability = "MUTABLE"
