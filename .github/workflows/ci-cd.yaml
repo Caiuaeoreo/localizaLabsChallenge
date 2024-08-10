@@ -6,8 +6,43 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  pre-deploy:
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Initialize Terraform for s3
+        run: |
+          cd bucket-tfstate
+          terraform init
+
+      - name: Apply Terraform (S3)
+        run: |
+          cd bucket-tfstate
+          terraform apply -auto-approve
+
+      - name: Initialize Terraform
+        run: |
+          cd terraform
+          terraform init
+
+      - name: Apply Terraform (ECR only)
+        run: |
+          cd terraform
+          terraform apply -target=aws_ecr_repository.myapp-repo -auto-approve
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: pre-deploy
 
     steps:
       - name: Checkout code
@@ -30,6 +65,26 @@ jobs:
           cd flask-app
           docker build -t my-flask-app:latest .
 
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      - name: Tag Docker image
+        run: |
+          docker tag my-flask-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/myapp-prod:latest
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/myapp-prod:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -42,24 +97,16 @@ jobs:
           cd terraform
           terraform init
 
-      - name: Plan Terraform
-        run: |
-          cd terraform
-          terraform plan
-
       - name: Apply Terraform
         run: |
           cd terraform
           terraform apply -auto-approve
 
-      - name: Login to Amazon ECR
+      - name: Update kubeconfig
         run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name myapp
 
-      - name: Tag Docker image
+      - name: Deploy application on EKS
         run: |
-          docker tag my-flask-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/myapp-prod:latest
-
-      - name: Push Docker image to ECR
-        run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/myapp-prod:latest
+          kubectl create deployment my-flask-app --image=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/myapp-prod:latest
+          kubectl expose deployment my-flask-app --type=NodePort --port=80
