@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "terraform-state-bucket"
+  bucket = "caiua-localiza-terraform-state-bucket"
   acl    = "private"
   tags = {
     Name = "Terraform State Bucket"
