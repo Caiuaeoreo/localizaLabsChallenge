@@ -31,10 +31,12 @@ jobs:
           docker build -t my-flask-app:latest .
 
       - name: Save Docker image as artifact
+        run: |
+          docker save -o my-flask-app.tar my-flask-app:latest
         uses: actions/upload-artifact@v3
         with:
           name: my-flask-app-image
-          path: /var/lib/docker/volumes
+          path: my-flask-app.tar
 
   deploy:
     runs-on: ubuntu-latest
@@ -74,6 +76,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: my-flask-app-image
+
+      - name: Load Docker image
+        run: |
+          docker load -i my-flask-app.tar
 
       - name: Tag Docker image
         run: |
