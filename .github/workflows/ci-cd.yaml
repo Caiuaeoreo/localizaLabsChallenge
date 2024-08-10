@@ -129,4 +129,4 @@ jobs:
       - name: Deploy application on EKS
         run: |
           kubectl create deployment my-flask-app --image=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/myapp-prod:latest
-          kubectl expose deployment my-flask-app --type=NodePort --port=80
+          kubectl expose deployment my-flask-app --type=NodePort --port=5000
