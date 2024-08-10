@@ -23,7 +23,7 @@ jobs:
       - name: Check if S3 bucket exists
         id: check-bucket
         run: |
-          if aws s3api head-bucket --bucket my-unique-terraform-state-bucket 2>/dev/null; then
+          if aws s3api head-bucket --bucket caiua-localiza-terraform-state-bucket 2>/dev/null; then
             echo "Bucket exists."
             echo "bucket_exists=true" >> $GITHUB_ENV
           else
