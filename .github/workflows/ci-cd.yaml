@@ -30,15 +30,15 @@ jobs:
             echo "Bucket does not exist."
             echo "bucket_exists=false" >> $GITHUB_ENV
           fi
-
+      
       - name: Initialize Terraform for S3
-        if: ${{ env.bucket_exists }} == 'false'
+        if: ${{ env.bucket_exists == 'false' }}
         run: |
           cd bucket-tfstate
           terraform init
-
+      
       - name: Apply Terraform (S3)
-        if: ${{ env.bucket_exists }} == 'false'
+        if: ${{ env.bucket_exists == 'false' }}
         run: |
           cd bucket-tfstate
           terraform apply -auto-approve
