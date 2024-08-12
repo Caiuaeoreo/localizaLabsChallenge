@@ -22,7 +22,7 @@ jobs:
       - name: Check if S3 buckets exist
         id: check-buckets
         run: |
-          if aws s3api head-bucket --bucket caiua-localiza-terraform-state-bucket 2>/dev/null; then
+          if aws s3api head-bucket --bucket caiua-localiza-terraform-challenge-state-bucket 2>/dev/null; then
             echo "bucket1_exists=true" >> $GITHUB_ENV
           else
             echo "bucket1_exists=false" >> $GITHUB_ENV
