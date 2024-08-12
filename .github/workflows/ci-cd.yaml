@@ -95,25 +95,25 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: coverage-report
-          path: flask-app/htmlcov
+          path: flask-app/.coverage
   
       - name: Lint code
         run: |
           cd flask-app
           . venv/bin/activate
-          flake8 .
+          flake8 *.py
   
       - name: Format code
         run: |
           cd flask-app
           . venv/bin/activate
-          black --check .
+          black --check *.py
   
       - name: Security check
         run: |
           cd flask-app
           . venv/bin/activate
-          bandit -r .
+          bandit -r *.py
   
       - name: Build Docker image
         if: steps.run-tests.outcome == 'success'
