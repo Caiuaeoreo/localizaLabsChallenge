@@ -211,6 +211,7 @@ jobs:
         if: ${{ env.service_exists == 'false' }}
         run: |
           kubectl expose deployment my-flask-app --type=LoadBalancer --port=80 --target-port=5000 --namespace myapp
+          sleep 180
         
       - name: Get Load Balancer Name and Hosted Zone ID
         run: |
