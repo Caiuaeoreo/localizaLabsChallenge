@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "caiua-localiza-terraform-state-bucket"
+  bucket = "caiua-localiza-terraform-challenge-state-bucket"
   tags = {
     Name = "Terraform State Bucket"
   }
