@@ -50,7 +50,6 @@ resource "aws_route_table_association" "b" {
   route_table_id = aws_route_table.main.id
 }
 
-# EKS IAM Role
 resource "aws_iam_role" "eks_role" {
   name               = "eks-cluster-role"
   assume_role_policy = data.aws_iam_policy_document.eks_assume_role_policy.json
@@ -79,23 +78,11 @@ resource "aws_iam_role_policy_attachment" "eks_role_AmazonEKSVPCResourceControll
   role       = aws_iam_role.eks_role.name
 }
 
-# EKS Node Group IAM Role
 resource "aws_iam_role" "eks_node_role" {
   name               = "eks-node-group-role"
   assume_role_policy = data.aws_iam_policy_document.eks_node_assume_role_policy.json
 
   tags = module.tags.tags
-}
-
-data "aws_iam_policy_document" "eks_node_assume_role_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
-    }
-  }
 }
 
 resource "aws_iam_role_policy_attachment" "eks_node_role_AmazonEKSWorkerNodePolicy" {
@@ -113,7 +100,17 @@ resource "aws_iam_role_policy_attachment" "eks_node_role_AmazonEKS_CNI_Policy" {
   role       = aws_iam_role.eks_node_role.name
 }
 
-# Security Group for EKS Cluster
+data "aws_iam_policy_document" "eks_node_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
 resource "aws_security_group" "eks_cluster_sg" {
   vpc_id = aws_vpc.main.id
 
@@ -134,7 +131,6 @@ resource "aws_security_group" "eks_cluster_sg" {
   tags = module.tags.tags
 }
 
-# EKS Cluster
 resource "aws_eks_cluster" "eks_cluster" {
   name     = var.application
   role_arn = aws_iam_role.eks_role.arn
@@ -147,7 +143,6 @@ resource "aws_eks_cluster" "eks_cluster" {
   tags = module.tags.tags
 }
 
-# EKS Node Group
 resource "aws_eks_node_group" "node_group" {
   cluster_name    = aws_eks_cluster.eks_cluster.name
   node_group_name = "eks-${var.application}-ng"
@@ -163,7 +158,6 @@ resource "aws_eks_node_group" "node_group" {
   tags = module.tags.tags
 }
 
-# ECR Repository
 resource "aws_ecr_repository" "myapp-repo" {
   name = "${var.application}-${var.environment}"
 

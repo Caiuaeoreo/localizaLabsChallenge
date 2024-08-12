@@ -1,1 +1,6 @@
 Flask
+pytest
+flake8
+black
+bandit
+pytest-cov
