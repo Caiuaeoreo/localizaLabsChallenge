@@ -172,6 +172,7 @@ jobs:
             echo "namespace_exists=true" >> $GITHUB_ENV
           else
             echo "namespace_exists=false" >> $GITHUB_ENV
+          fi
 
       - name: Create namespace if not exists
         if: ${{ env.namespace_exists == 'false' }}
@@ -185,6 +186,7 @@ jobs:
             echo "deployment_exists=true" >> $GITHUB_ENV
           else
             echo "deployment_exists=false" >> $GITHUB_ENV
+          fi
 
       - name: Create deployment if not exists
         if: ${{ env.deployment_exists == 'false' }}
@@ -198,6 +200,7 @@ jobs:
             echo "service_exists=true" >> $GITHUB_ENV
           else
             echo "service_exists=false" >> $GITHUB_ENV
+          fi
 
       - name: Create service if not exists
         if: ${{ env.service_exists == 'false' }}
