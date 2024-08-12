@@ -8,7 +8,7 @@ data "aws_elb" "my_flask_app_lb" {
 
 resource "aws_route53_record" "flask_app_dns" {
   zone_id = data.aws_route53_zone.main.id
-  name    = "challend-localiza-labs.${data.aws_route53_zone.main.name}"
+  name    = "challenge-localiza-labs.${data.aws_route53_zone.main.name}"
   type    = "A"
 
   alias {
