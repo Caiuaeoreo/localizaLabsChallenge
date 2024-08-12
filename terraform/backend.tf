@@ -4,7 +4,7 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket         = "caiua-localiza-terraform-state-bucket"
+    bucket         = "caiua-localiza-terraform-challenge-state-bucket"
     key            = "terraform/state.tfstate"
     region         = "us-east-1"
   }
