@@ -206,3 +206,23 @@ jobs:
         if: ${{ env.service_exists == 'false' }}
         run: |
           kubectl expose deployment my-flask-app --type=LoadBalancer --port=5000 --target-port=5000 --namespace myapp
+        
+      - name: Get Load Balancer Name and Hosted Zone ID
+        run: |
+          load_balancer_name=$(aws elb describe-load-balancers --region us-east-1 --query "LoadBalancerDescriptions[*].LoadBalancerName" --output text)
+          hosted_zone_id=$(aws elb describe-load-balancers --region us-east-1 --query "LoadBalancerDescriptions[*].CanonicalHostedZoneNameID" --output text)
+          echo "load_balancer_name=$load_balancer_name" >> $GITHUB_ENV
+          echo "hosted_zone_id=$hosted_zone_id" >> $GITHUB_ENV
+
+      - name: Initialize Terraform
+        run: |
+          cd terraform/modules/dns-record
+          terraform init
+
+      - name: Export Terraform Variables and Apply
+        run: |
+          export TF_VAR_load_balancer_name="${{ env.load_balancer_name }}"
+          export TF_VAR_hosted_zone_id="${{ env.hosted_zone_id }}"
+          export TF_VAR_account_id="${{ secrets.AWS_ACCOUNT_ID }}"
+          cd terraform/modules/dns-record
+          terraform apply -auto-approve
