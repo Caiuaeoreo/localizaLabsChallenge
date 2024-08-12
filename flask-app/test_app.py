@@ -19,4 +19,5 @@ def test_ping(client):
     assert response.status_code == 200  # nosec
     assert response.data == b"pong"  # nosec
 
+
 # End of code
